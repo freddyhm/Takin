@@ -23,5 +23,6 @@ include_directories(
 
 
 add_executable(capra_motors src/cmd_vel.cpp)
+add_executable(capra_motors_test src/testEcho.cc)
 target_link_libraries(capra_motors ${catkin_LIBRARIES})
 
