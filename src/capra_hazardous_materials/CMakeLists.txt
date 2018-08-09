@@ -24,6 +24,7 @@ include_directories(
 ## Declare a C++ library
 add_executable(${PROJECT_NAME}
    src/DisplayImage.cpp
+   src/PolygonDetector.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

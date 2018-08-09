@@ -14,35 +14,36 @@ using namespace std;
 int main(int argc, char **argv)
 {
 
-    ros::init(argc, argv, "capra_hazardous_materials");
+  ros::init(argc, argv, "capra_hazardous_materials_node");
 
-    ros::NodeHandle n;
+  ros::NodeHandle n;
 
-   
 
-    ros::spin();
-    
-    return 0;
 
-   // if (argc != 2)
- //   {
+  // if (argc != 2)
+  //   {
   //      printf("usage: DisplayImage.out <Image_Path>\n");
-   //     return -1;
+  //     return -1;
   //  }
-   // PolygonDetector detec
-   //     PolygonDetector detector = PolygonDetector(argv[1]);
 
-  //  detector.detect();
+  PolygonDetector detector = PolygonDetector("/home/razma/capra/capra_takin/Takin/src/capra_hazardous_materials/1Symbole.jpg");
 
-    // Mat image;
-    // Mat hsv;
-    // Mat threshold;
-    // image = imread( argv[1], 1 );
+  detector.detect();
 
-    //  cvtColor( image,  hsv, CV_BGR2HSV );
-    // inRange(hsv,Scalar(0,0,230),Scalar(255,230,255),threshold);
+  // Mat image;
+  // Mat hsv;
+  // Mat threshold;
+  // image = imread(/home/razma/capra/capra_takin/Takin/src/capra_hazardous_materials/1Symbole.jpg, 1 );
 
-    // namedWindow("Display Image", WINDOW_AUTOSIZE );
-    // imshow("Display Image",threshold);
-    // waitKey(0);
+  //  cvtColor( image,  hsv, CV_BGR2HSV );
+  // inRange(hsv,Scalar(0,0,230),Scalar(255,230,255),threshold);
+
+  // namedWindow("Display Image", WINDOW_AUTOSIZE );
+  // imshow("Display Image",threshold);
+  // waitKey(0);
+
+
+  ros::spin();
+
+  return 0;
 }
