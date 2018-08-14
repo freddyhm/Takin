@@ -1,0 +1,5 @@
+<launch>
+<!-- Capra Hazardous detection node-->
+    <node pkg="capra_motion_detection" type="capra_motion_detection" name="capra_motion_detection"/> 
+
+</launch>
