@@ -28,21 +28,21 @@ int PolygonDetector::detect()
     drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
   }
 
- // namedWindow("Display Image", WINDOW_AUTOSIZE);
- // imshow("Display Image", drawing);
- // waitKey(0);
+  namedWindow("Display Image", WINDOW_AUTOSIZE);
+  imshow("Display Image", drawing);
+  waitKey(0);
 
   return 0;
 }
 //void PolygonDetector::drawContour(Mat output)
 //{
- // Mat drawing = Mat::zeros(output.size(), CV_8UC3);
- // for (int i = 0; i < contours.size(); i++)
- // {
- //   Scalar color = Scalar(255, 255, 255);
+// Mat drawing = Mat::zeros(output.size(), CV_8UC3);
+// for (int i = 0; i < contours.size(); i++)
+// {
+//   Scalar color = Scalar(255, 255, 255);
 
-  //  drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
- // }
+//  drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+// }
 //}
 void PolygonDetector::drawResult()
 {

@@ -8,7 +8,6 @@
 #include "PolygonDetector.h"
 
 using namespace cv;
-
 using namespace std;
 
 int main(int argc, char **argv)
@@ -18,15 +17,13 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-
-
   // if (argc != 2)
   //   {
   //      printf("usage: DisplayImage.out <Image_Path>\n");
   //     return -1;
   //  }
 
-  PolygonDetector detector = PolygonDetector("/home/razma/capra/capra_takin/Takin/src/capra_hazardous_materials/1Symbole.jpg");
+  PolygonDetector detector = PolygonDetector("/home/razma/capra/capra_takin/Takin/src/capra_hazardous_materials/SymbolPoster.jpg");
 
   detector.detect();
 
@@ -41,7 +38,6 @@ int main(int argc, char **argv)
   // namedWindow("Display Image", WINDOW_AUTOSIZE );
   // imshow("Display Image",threshold);
   // waitKey(0);
-
 
   ros::spin();
 
