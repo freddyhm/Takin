@@ -1,8 +1,12 @@
+#include <image_transport/image_transport.h>
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 //#include <opencv/highgui.h>
+#include <cv_bridge/cv_bridge.h>
+#include <chrono>
+#include <thread>
 
 using namespace cv;
 using namespace std;
@@ -72,7 +76,7 @@ void searchForMovement(Mat thresholdImage, Mat &cameraFeed){
             rrect.points(vertices);
             for (int i = 0; i < 4; ++i)
             {
-                    cv::line(cameraFeed, vertices[i], vertices[(i + 1) % 4], cv::Scalar(0, 0, 255), 1, CV_AA);
+                    cv::line(cameraFeed, vertices[i], vertices[(i + 1) % 4], cv::Scalar(0, 0, 255), 2, CV_AA);
             }
             //cv::imshow("box", cameraFeed);
 
@@ -110,132 +114,175 @@ void searchForMovement(Mat thresholdImage, Mat &cameraFeed){
      
  
 }
+
 int main(int argc, char *argv[])
 {
     ros::init(argc,argv,"capra_motion_detection_static_publisher");
 
+    ros::NodeHandle nh;
+    //cv::namedWindow("view");
+    //cv::startWindowThread();
+    image_transport::ImageTransport it(nh);
+    image_transport::Publisher pub = it.advertise( "capra/motion_detection/image",1);
 
-//some boolean variables for added functionality
-    bool objectDetected = false;
-    //these two can be toggled by pressing 'd' or 't'
-    bool debugMode = false;
-    bool trackingEnabled = false;
-    //pause and resume code
-    bool pause = false;
-    //set up the matrices that we will need
-    //the two frames we will be comparing
-    Mat frame1,frame2;
-    //their grayscale images (needed for absdiff() function)
-    Mat grayImage1,grayImage2;
-    //resulting difference image
-    Mat differenceImage;
-    //thresholded difference image (for use in findContours() function)
-    Mat thresholdImage;
-    //video capture object.
-    VideoCapture capture;
+    image_transport::Subscriber sub = it.subscribe("/capra/camera_3d/rgb/image_raw", 1, [&pub](const sensor_msgs::ImageConstPtr& msg){
+        static Mat last_frame;
+        Mat current_frame;
+        try
+        {
+            // Set first image as last_frame
+            if(last_frame.empty()){
+                last_frame = cv_bridge::toCvShare(msg, "bgr8")->image;
+                return;
+            }
+            current_frame=cv_bridge::toCvShare(msg, "bgr8")->image;
+             
+        //cv::imshow("view", cv_bridge::toCvShare(msg, "bgr8")->image);
+        //cv::waitKey(1);
+        //this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        catch (cv_bridge::Exception& e)
+        {
+        ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+        }
 
-    capture.open(0);
- 
-    if(!capture.isOpened()){
-        cout<<"ERROR ACQUIRING VIDEO FEED\n";
-        getchar();
-        return -1;
-    }
-    while(1){
- 
-        //we can loop the video by re-opening the capture every time the video reaches its last frame
- 
         
- 
-        //check if the video has reach its last frame.
-        //we add '-1' because we are reading two frames from the video at a time.
-        //if this is not included, we get a memory error!
- 
-        //read first frame
-        capture.read(frame1);
-        //convert frame1 to gray scale for frame differencing
-        cv::cvtColor(frame1,grayImage1,COLOR_BGR2GRAY);
-        //copy second frame
-        capture.read(frame2);
-        //convert frame2 to gray scale for frame differencing
-        cv::cvtColor(frame2,grayImage2,COLOR_BGR2GRAY);
-        //perform frame differencing with the sequential images. This will output an "intensity image"
-        //do not confuse this with a threshold image, we will need to perform thresholding afterwards.
-        cv::absdiff(grayImage1,grayImage2,differenceImage);
-        //threshold intensity image at a given sensitivity value
-        cv::threshold(differenceImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
-        if(debugMode==true){
-            //show the difference image and threshold image
-            cv::imshow("Difference Image",differenceImage);
-            cv::imshow("Threshold Image", thresholdImage);
-        }else{
-            //if not in debug mode, destroy the windows so we don't see them anymore
-            //cv::destroyWindow("Difference Image");
-            //cv::destroyWindow("Threshold Image");
+        //some boolean variables for added functionality
+        //bool objectDetected = false;
+        //these two can be toggled by pressing 'd' or 't'
+        bool debugMode = false;
+        //bool trackingEnabled = false;
+        //pause and resume code
+        //bool pause = false;
+        //set up the matrices that we will need
+        //the two frames we will be comparing
+        //their grayscale images (needed for absdiff() function)
+        Mat grayImage1,grayImage2;
+        //resulting difference image
+        Mat differenceImage;
+        //thresholded difference image (for use in findContours() function)
+        Mat thresholdImage;
+        //video capture object.
+        //VideoCapture capture;
+
+        //capture.open(0);
+    
+        /*if(!capture.isOpened()){
+            cout<<"ERROR ACQUIRING VIDEO FEED\n";
+            getchar();
+            return -1;
         }
-        //blur the image to get rid of the noise. This will output an intensity image
-        cv::blur(thresholdImage,thresholdImage,cv::Size(BLUR_SIZE,BLUR_SIZE));
-        //threshold again to obtain binary image from blur output
-        cv::threshold(thresholdImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
-        if(debugMode==true){
-            //show the threshold image after it's been "blurred"
+        while(1){*/
+    
+            //we can loop the video by re-opening the capture every time the video reaches its last frame
+    
+            
+    
+            //check if the video has reach its last frame.
+            //we add '-1' because we are reading two frames from the video at a time.
+            //if this is not included, we get a memory error!
+    
+            //read first frame
+            //capture.read(last_frame);
+            //convert last_frame to gray scale for frame differencing
+            cv::cvtColor(last_frame,grayImage1,COLOR_BGR2GRAY);
+            //copy second frame
+            //capture.read(current_frame);
+            //convert current_frame to gray scale for frame differencing
+            cv::cvtColor(current_frame,grayImage2,COLOR_BGR2GRAY);
+            //perform frame differencing with the sequential images. This will output an "intensity image"
+            //do not confuse this with a threshold image, we will need to perform thresholding afterwards.
+            cv::absdiff(grayImage1,grayImage2,differenceImage);
+            //threshold intensity image at a given sensitivity value
+            cv::threshold(differenceImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
+            if(debugMode==true){
+                //show the difference image and threshold image
+                //cv::imshow("Difference Image",differenceImage);
+                //cv::imshow("Threshold Image", thresholdImage);
+            }else{
+                //if not in debug mode, destroy the windows so we don't see them anymore
+                //cv::destroyWindow("Difference Image");
+                //cv::destroyWindow("Threshold Image");
+            }
+            //blur the image to get rid of the noise. This will output an intensity image
+            cv::blur(thresholdImage,thresholdImage,cv::Size(BLUR_SIZE,BLUR_SIZE));
+            //threshold again to obtain binary image from blur output
+            cv::threshold(thresholdImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
+            if(debugMode==true){
+                //show the threshold image after it's been "blurred"
 
-            imshow("Final Threshold Image",thresholdImage);
+                //imshow("Final Threshold Image",thresholdImage);
 
-        }
-        else {
-            //if not in debug mode, destroy the windows so we don't see them anymore
-            //cv::destroyWindow("Final Threshold Image");
-        }
+            }
+            else {
+                //if not in debug mode, destroy the windows so we don't see them anymore
+                //cv::destroyWindow("Final Threshold Image");
+            }
 
-        //if tracking enabled, search for contours in our thresholded image
-        if(trackingEnabled){
+            //if tracking enabled, search for contours in our thresholded image
+            //if(trackingEnabled){
 
-            searchForMovement(thresholdImage,frame1);
-        }
+            searchForMovement(thresholdImage,last_frame);
+            //}
 
-        //show our captured frame
-        imshow("Frame1",frame1);
-        //check to see if a button has been pressed.
-        //this 10ms delay is necessary for proper operation of this program
-        //if removed, frames will not have enough time to referesh and a blank 
-        //image will appear.
-        switch(waitKey(10)){
+            //show our captured frame
+            //imshow("Frame1",last_frame);
+            //check to see if a button has been pressed.
+            //this 10ms delay is necessary for proper operation of this program
+            //if removed, frames will not have enough time to referesh and a blank 
+            //image will appear.
+            /*switch(waitKey(10)){
 
-        case 27: //'esc' key has been pressed, exit program.
-            return 0;
-        case 116: //'t' has been pressed. this will toggle tracking
-            trackingEnabled = !trackingEnabled;
-            if(trackingEnabled == false) cout<<"Tracking disabled."<<endl;
-            else cout<<"Tracking enabled."<<endl;
-            break;
-        case 100: //'d' has been pressed. this will debug mode
-            debugMode = !debugMode;
-            if(debugMode == false){
-                cout<<"Debug mode disabled."<<endl;
-                cv::destroyWindow("Difference Image");
-                cv::destroyWindow("Threshold Image");
-                cv::destroyWindow("Final Threshold Image");
-            } 
-            else cout<<"Debug mode enabled."<<endl;
-            break;
-        case 112: //'p' has been pressed. this will pause/resume the code.
-            pause = !pause;
-            if(pause == true){ cout<<"Code paused, press 'p' again to resume"<<endl;
-            while (pause == true){
-                //stay in this loop until 
-                switch (waitKey()){
-                    //a switch statement inside a switch statement? Mind blown.
-                case 112: 
-                    //change pause back to false
-                    pause = false;
-                    cout<<"Code Resumed"<<endl;
-                    break;
+            case 27: //'esc' key has been pressed, exit program.
+                return ;
+            case 116: //'t' has been pressed. this will toggle tracking
+                trackingEnabled = !trackingEnabled;
+                if(trackingEnabled == false) cout<<"Tracking disabled."<<endl;
+                else cout<<"Tracking enabled."<<endl;
+                break;
+            case 100: //'d' has been pressed. this will debug mode
+                debugMode = !debugMode;
+                if(debugMode == false){
+                    cout<<"Debug mode disabled."<<endl;
+                    cv::destroyWindow("Difference Image");
+                    cv::destroyWindow("Threshold Image");
+                    cv::destroyWindow("Final Threshold Image");
+                } 
+                else cout<<"Debug mode enabled."<<endl;
+                break;
+            case 112: //'p' has been pressed. this will pause/resume the code.
+                pause = !pause;
+                if(pause == true){ cout<<"Code paused, press 'p' again to resume"<<endl;
+                while (pause == true){
+                    //stay in this loop until 
+                    switch (waitKey()){
+                        //a switch statement inside a switch statement? Mind blown.
+                    case 112: 
+                        //change pause back to false
+                        pause = false;
+                        cout<<"Code Resumed"<<endl;
+                        break;
+                    }
                 }
-            }
-            }
-        }
-    }
+                }
+            }*/
+        //}
+        // Convert opencv image to ROS sensor_msgs image
+        // Publish the ROS sensor_msgs image);
+        //sensor_msgs::ImageConstPtr msg =
+        pub.publish(cv_bridge::CvImage(
+            std_msgs::Header() /* empty header */,
+            "bgr8" /* image format */,
+            last_frame /* the opencv image object */
+        ).toImageMsg());
+        
+        //set current_frame to last_frame for next time
+        last_frame = current_frame;
+    
+    });
+    ros::spin();
+    //cv::destroyWindow("view");
+
 
     return 0;
 }
