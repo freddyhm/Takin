@@ -123,9 +123,12 @@ int main(int argc, char *argv[])
     //cv::namedWindow("view");
     //cv::startWindowThread();
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub = it.advertise( "capra/motion_detection/image",1);
+    image_transport::Publisher pub_motion = it.advertise( "capra/motion_detection/motion",1);
+    image_transport::Publisher pub_difference = it.advertise( "capra/motion_detection/difference",1);
+    image_transport::Publisher pub_threshold = it.advertise( "capra/motion_detection/threshold",1);
+    image_transport::Publisher pub_blurred_threshold = it.advertise( "capra/motion_detection/blurred_threshold",1);
 
-    image_transport::Subscriber sub = it.subscribe("/capra/camera_3d/rgb/image_raw", 1, [&pub](const sensor_msgs::ImageConstPtr& msg){
+    image_transport::Subscriber sub = it.subscribe("/capra/camera_3d/rgb/image_raw", 1, [&](const sensor_msgs::ImageConstPtr& msg){
         static Mat last_frame;
         Mat current_frame;
         try
@@ -195,6 +198,17 @@ int main(int argc, char *argv[])
             cv::absdiff(grayImage1,grayImage2,differenceImage);
             //threshold intensity image at a given sensitivity value
             cv::threshold(differenceImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
+
+            pub_difference.publish(cv_bridge::CvImage(
+                std_msgs::Header() /* empty header */,
+                sensor_msgs::image_encodings::MONO8 /* image format */,
+                differenceImage /* the opencv image object */
+            ).toImageMsg());
+            pub_threshold.publish(cv_bridge::CvImage(
+                std_msgs::Header() /* empty header */,
+                sensor_msgs::image_encodings::MONO8 /* image format */,
+                thresholdImage /* the opencv image object */
+            ).toImageMsg());
             if(debugMode==true){
                 //show the difference image and threshold image
                 //cv::imshow("Difference Image",differenceImage);
@@ -208,6 +222,12 @@ int main(int argc, char *argv[])
             cv::blur(thresholdImage,thresholdImage,cv::Size(BLUR_SIZE,BLUR_SIZE));
             //threshold again to obtain binary image from blur output
             cv::threshold(thresholdImage,thresholdImage,SENSITIVITY_VALUE,255,THRESH_BINARY);
+
+            pub_blurred_threshold.publish(cv_bridge::CvImage(
+                std_msgs::Header() /* empty header */,
+                sensor_msgs::image_encodings::MONO8 /* image format */,
+                thresholdImage /* the opencv image object */
+            ).toImageMsg());
             if(debugMode==true){
                 //show the threshold image after it's been "blurred"
 
@@ -269,10 +289,9 @@ int main(int argc, char *argv[])
         //}
         // Convert opencv image to ROS sensor_msgs image
         // Publish the ROS sensor_msgs image);
-        //sensor_msgs::ImageConstPtr msg =
-        pub.publish(cv_bridge::CvImage(
+        pub_motion.publish(cv_bridge::CvImage(
             std_msgs::Header() /* empty header */,
-            "bgr8" /* image format */,
+            sensor_msgs::image_encodings::BGR8 /* image format */,
             last_frame /* the opencv image object */
         ).toImageMsg());
         
