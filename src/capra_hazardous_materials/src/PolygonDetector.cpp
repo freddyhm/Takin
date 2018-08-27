@@ -11,7 +11,7 @@ int PolygonDetector::detect()
 {
 
   RNG rng(12345);
-  convertToGrayScale();
+ convertToGrayScale(); 
   Mat canny_output;
   vector<vector<Point>> contours;
   vector<Vec4i> hierarchy;
@@ -21,7 +21,7 @@ int PolygonDetector::detect()
   findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
   Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
-  for (int i = 0; i < contours.size(); i++)
+ for (int i = 0; i < contours.size(); i++)
   {
     Scalar color = Scalar(255, 255, 255);
 
