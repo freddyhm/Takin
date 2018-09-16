@@ -7,6 +7,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <chrono>
 #include <thread>
+#include <string>
+#include <ros/console.h>
 
 using namespace cv;
 using namespace std;
@@ -119,26 +121,35 @@ int main(int argc, char *argv[])
 {
     ros::init(argc,argv,"capra_motion_detection_static_publisher");
 
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
+    
+    string source;
+    nh.param<string>("source",source,"");
+    string output = source.substr(0,source.find_first_of("/",1))+"/motion_detection"+source.substr(source.find_first_of("/",1));
     //cv::namedWindow("view");
     //cv::startWindowThread();
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub_motion = it.advertise( "capra/motion_detection/motion",1);
-    image_transport::Publisher pub_difference = it.advertise( "capra/motion_detection/difference",1);
-    image_transport::Publisher pub_threshold = it.advertise( "capra/motion_detection/threshold",1);
-    image_transport::Publisher pub_blurred_threshold = it.advertise( "capra/motion_detection/blurred_threshold",1);
+    image_transport::Publisher pub_motion = it.advertise( output+"/motion",1);
+    image_transport::Publisher pub_difference = it.advertise( output+"/difference",1);
+    image_transport::Publisher pub_threshold = it.advertise( output+"/threshold",1);
+    image_transport::Publisher pub_blurred_threshold = it.advertise( output+"/blurred_threshold",1);
 
-    image_transport::Subscriber sub = it.subscribe("/capra/camera_3d/rgb/image_raw", 1, [&](const sensor_msgs::ImageConstPtr& msg){
+    string source_encoding;
+    
+    nh.param<string>("source_encoding",source_encoding,"");
+    ROS_DEBUG("Source: %s",source);
+    image_transport::Subscriber sub = it.subscribe(source, 1, [&](const sensor_msgs::ImageConstPtr& msg){
         static Mat last_frame;
         Mat current_frame;
         try
         {
             // Set first image as last_frame
             if(last_frame.empty()){
-                last_frame = cv_bridge::toCvShare(msg, "bgr8")->image;
+                ROS_DEBUG("Encoding: %s trying %s",msg->encoding.c_str(),source_encoding);
+                last_frame = cv_bridge::toCvShare(msg, source_encoding)->image;
                 return;
             }
-            current_frame=cv_bridge::toCvShare(msg, "bgr8")->image;
+            current_frame=cv_bridge::toCvShare(msg, source_encoding)->image;
              
         //cv::imshow("view", cv_bridge::toCvShare(msg, "bgr8")->image);
         //cv::waitKey(1);
