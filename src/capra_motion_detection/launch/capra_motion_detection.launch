@@ -3,6 +3,7 @@
     <arg name="source_encoding" default="bgr8" doc=""/>
 
 
+
 <!-- Capra Hazardous detection node-->
     <node pkg="capra_motion_detection" type="capra_motion_detection" name="capra_motion_detection" output="screen">
     <param name="source"  type="string" value="$(arg source)" />
