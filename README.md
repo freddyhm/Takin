@@ -74,3 +74,7 @@ If you want to contribute to the projet, you can fork it and then PR to add or m
 ### Standard
 
 Right now we don't really have any coding standard, but it is something we want to implement in the project. So the status of this part is TBD.
+
+###
+
+[Find area of a 3D triangle package](src/area_triangle_3d/README.md)
