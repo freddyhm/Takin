@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="area_triangle_3d" type="find_area_triangle_3d_server" name="find_area_triangle_3d_server_node" output="screen" launch-prefix="gnome-terminal --command" />
+    <node pkg="area_triangle_3d" type="find_area_triangle_3d_client" name="find_area_triangle_3d_client_node" output="screen" launch-prefix="gnome-terminal --command" />
+     <node pkg="area_triangle_3d" type="find_area_triangle_3d_sub" name="find_area_triangle_3d_sub_node" output="screen" launch-prefix="gnome-terminal --command"/>
+</launch>
